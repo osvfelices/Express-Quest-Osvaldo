@@ -13,35 +13,34 @@ const welcome = (req, res) => {
 const movieHandlers = require("./movieHandlers");
 const usersHandlers = require("./usersHandlers");
 const { validateMovie, validateUser } = require("./validators.js");
-const { hashPassword, verifyPassword } = require("./auth");
+const { hashPassword, verifyPassword, verifyToken } = require("./auth");
 
 app.get("/", welcome);
 
-
-// Movies
+// Public routes 
 app.get("/api/movies", movieHandlers.getMovies);
 app.get("/api/movies/:id", movieHandlers.getMovieById);
-app.post("/api/movies", movieHandlers.postMovie);
-app.put("/api/movies/:id", movieHandlers.updateMovie);
-app.post("/api/movies", validateMovie, movieHandlers.postMovie);
-app.delete("/api/movies/:id", movieHandlers.deleteMovie);
-
-
-
-// Users
 app.get("/api/users", usersHandlers.getUsers);
 app.get("/api/users/:id", usersHandlers.getUserById);
-app.post("/api/users", usersHandlers.postUser);
-app.put("/api/users/:id", usersHandlers.updateUser);
-app.post("/api/users", validateUser, usersHandlers.postUser);
-app.delete("/api/users/:id", usersHandlers.deleteUser);
-app.post("/api/users", hashPassword, usersHandlers.postUser);
 
+// Authentication routes for users
 app.post(
   "/api/login",
   usersHandlers.getUserByEmailWithPasswordAndPassToNext,
   verifyPassword
 );
+
+// Protected routes
+app.use(verifyToken); 
+
+app.post("/api/movies", movieHandlers.postMovie);
+app.put("/api/movies/:id", movieHandlers.updateMovie);
+app.delete("/api/movies/:id", movieHandlers.deleteMovie);
+
+// Users
+app.put("/api/users/:id", usersHandlers.updateUser);
+app.delete("/api/users/:id", usersHandlers.deleteUser);
+app.post("/api/users", hashPassword, validateUser, usersHandlers.postUser);
 
 app.listen(port, (err) => {
   if (err) {
